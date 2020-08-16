@@ -8,10 +8,11 @@ import random
 
 
 class TicTacToe:
-    def __init__(self):
+    def __init__(self, p1, p2):
         self.board = [None] * 9
         self.turn = True  # True - player, False - computer
-        self.level = "easy"
+        self.player = [p1, p2]
+        self.player_turn = 0
         # while True:
         # self.board = input("Enter cells: > ").strip()
 
@@ -65,6 +66,9 @@ class TicTacToe:
         # print('Game not finished')
         return False
 
+    def print_win_msg(self, who):
+        print('X wins' if who else 'O wins')
+
     def check_cell(self, x, y):
         return self.board[(x - 1) + (3 - y) * 3] is None
 
@@ -76,12 +80,9 @@ class TicTacToe:
             x = random.randint(1, 3)
             y = random.randint(1, 3)
             if self.check_cell(x, y):
-                print('Making move level "{}"'.format(self.level))
-                self.set_cell(x, y, False)
+                print('Making move level "{}"'.format(self.player[self.player_turn]))
+                self.set_cell(x, y, self.turn)
                 break
-
-    def print_win_msg(self, who):
-        print('X wins' if who else 'O wins')
 
     def player_move(self):
         def check_input(a):
@@ -99,7 +100,7 @@ class TicTacToe:
                 if len(l) == 2:
                     x, y = map(int, l)
                     if self.check_cell(x, y):
-                        self.set_cell(x, y, True)
+                        self.set_cell(x, y, self.turn)
                         break
                     else:
                         print("This cell is occupied! Choose another one!")
@@ -107,18 +108,34 @@ class TicTacToe:
                     print("Please enter only two values separated by a single space")
 
     def next_move(self):
-        self.player_move() if self.turn else self.computer_move()
+        turn = self.player[self.player_turn]
+        if turn == "user":
+            self.player_move()
+        if turn == "easy":
+            self.computer_move()
+        self.player_turn = not self.player_turn
         self.turn = not self.turn
 
 
 def main():
-    game = TicTacToe()
-    game.print_board()
     while True:
-        game.next_move()
-        game.print_board()
-        if game.check_game():
+        command = input("Input command: > ").strip().split()
+        if len(command) == 3:
+            if command[0] == "start":
+                if (command[1] == "user" or command[1] == "easy") and (command[2] == "user" or command[2] == "easy"):
+                    game = TicTacToe(command[1], command[2])
+                    game.print_board()
+                    while True:
+                        game.next_move()
+                        game.print_board()
+                        if game.check_game():
+                            break
+                else:
+                    print("Bad parameters!")
+        if command[0] == "exit":
             break
+
+
 
 
 if __name__ == '__main__':
