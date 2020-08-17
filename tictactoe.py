@@ -39,33 +39,36 @@ class TicTacToe:
             print('|')
         print('-' * 9)
 
-    def check_game(self, print_value):
+    def check_game(self, print_value, board = None):
+        if board == None:
+            board = self.board
         for i in range(3):
             # Check row
-            l = self.board[(i * 3):(i*3 + 3)]
+            l = board[(i * 3):(i*3 + 3)]
             if all(e == l[0] and e is not None for e in l):
                 if print_value:
                     self.print_win_msg(l[0])
                 return True
             # Check column
-            l = self.board[i:(i + 7):3]
+            l = board[i:(i + 7):3]
             if all(e == l[0] and e is not None for e in l):
                 if print_value:
                     self.print_win_msg(l[0])
                 return True
         # Check diagonal
-        if self.board[0] == self.board[4] == self.board[8] is not None:
+        if board[0] == board[4] == board[8] is not None:
             if print_value:
-                self.print_win_msg(self.board[0])
+                self.print_win_msg(board[0])
             return True
         # Check other diagonal
-        if self.board[2] == self.board[4] == self.board[6] is not None:
+        if board[2] == board[4] == board[6] is not None:
             if print_value:
-                self.print_win_msg(self.board[2])
+                self.print_win_msg(board[2])
             return True
         # If no more cells left and no winner
-        if None not in self.board:
-            print('Draw')
+        if None not in board:
+            if print_value:
+                print('Draw')
             return True
         # print('Game not finished')
         return False
@@ -107,7 +110,7 @@ class TicTacToe:
             x = random.randint(1, 3)
             y = random.randint(1, 3)
             if self.check_cell(x, y):
-                print('Making move level "easy"')
+                print('Making move level "{}"'.format(self.player[self.player_turn]))
                 self.set_cell(x, y, self.turn)
                 break
 
@@ -115,31 +118,62 @@ class TicTacToe:
         for x in range(1, 4):
             for y in range(1, 4):
                 if self.check_cell(x, y):
-                    #print("checking cell", x, y, "for me")
                     self.set_cell(x, y, self.turn)
-                    #self.print_board()
                     if self.check_game(False):
+                        print('Making move level "{}"'.format(self.player[self.player_turn]))
                         return
                     self.set_cell(x, y, None)
+
         for x in range(1, 4):
             for y in range(1, 4):
                 if self.check_cell(x, y):
-                    #print("checking cell", x, y, "for other player")
                     self.set_cell(x, y, not self.turn)
-                    #self.print_board()
                     if self.check_game(False):
                         self.set_cell(x, y, self.turn)
+                        print('Making move level "{}"'.format(self.player[self.player_turn]))
                         return
                     self.set_cell(x, y, None)
+        self.easy_move()
 
-        while True:
-            x = random.randint(1, 3)
-            y = random.randint(1, 3)
+    def hard_move(self):
 
-            if self.check_cell(x, y):
-                print('Making move level "medium"')
-                self.set_cell(x, y, self.turn)
-                break
+        def minimax(board, turn, fc):
+            fc += 1
+            new_turn = turn
+            new_board = board[:]
+            moves = []
+
+            if self.check_game(False, new_board):
+                if None not in new_board:
+                    return (-1, 0)
+                return (-1, 10) if self.turn == new_turn else (-1, -10)
+
+            for i in range(9):
+                if new_board[i] is None:
+                    new_board[i] = new_turn
+                    score = minimax(new_board, not new_turn, fc)[1]
+                    new_board[i] = None
+                    moves.append((i, score))
+
+            if self.turn == new_turn:
+                best_score = 10000
+                for move in moves:
+                    if move[1] < best_score:
+                        best_score = move[1]
+                        best_move = move
+            else:
+                best_score = -10000
+                for move in moves:
+                    if move[1] > best_score:
+                        best_score = move[1]
+                        best_move = move
+
+            return best_move
+
+        best_move = minimax(self.board, self.turn, 0)
+
+        print('Making move level "hard"')
+        self.board[best_move[0]] = self.turn
 
     def next_move(self):
         turn = self.player[self.player_turn]
@@ -149,14 +183,16 @@ class TicTacToe:
             self.easy_move()
         if turn == "medium":
             self.medium_move()
+        if turn == "hard":
+            self.hard_move()
         self.player_turn = not self.player_turn
         self.turn = not self.turn
 
-
 def main():
     while True:
-        available_commands = ["user", "easy", "medium"]
+        available_commands = ["user", "easy", "medium", "hard"]
         command = input("Input command: > ").strip().split()
+        #command = "start easy hard".split()
         if len(command) == 3:
             if command[0] == "start":
                 if (command[1] in available_commands) and (command[2] in available_commands):
@@ -171,9 +207,6 @@ def main():
                     print("Bad parameters!")
         if command[0] == "exit":
             break
-
-
-
 
 if __name__ == '__main__':
     main()
