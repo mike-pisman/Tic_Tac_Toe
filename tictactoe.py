@@ -39,25 +39,29 @@ class TicTacToe:
             print('|')
         print('-' * 9)
 
-    def check_game(self):
+    def check_game(self, print_value):
         for i in range(3):
             # Check row
             l = self.board[(i * 3):(i*3 + 3)]
             if all(e == l[0] and e is not None for e in l):
-                self.print_win_msg(l[0])
+                if print_value:
+                    self.print_win_msg(l[0])
                 return True
             # Check column
             l = self.board[i:(i + 7):3]
             if all(e == l[0] and e is not None for e in l):
-                self.print_win_msg(l[0])
+                if print_value:
+                    self.print_win_msg(l[0])
                 return True
         # Check diagonal
         if self.board[0] == self.board[4] == self.board[8] is not None:
-            self.print_win_msg(self.board[0])
+            if print_value:
+                self.print_win_msg(self.board[0])
             return True
         # Check other diagonal
         if self.board[2] == self.board[4] == self.board[6] is not None:
-            self.print_win_msg(self.board[2])
+            if print_value:
+                self.print_win_msg(self.board[2])
             return True
         # If no more cells left and no winner
         if None not in self.board:
@@ -74,15 +78,6 @@ class TicTacToe:
 
     def set_cell(self, x, y, value):
         self.board[(x - 1) + (3 - y) * 3] = value
-
-    def computer_move(self):
-        while True:
-            x = random.randint(1, 3)
-            y = random.randint(1, 3)
-            if self.check_cell(x, y):
-                print('Making move level "{}"'.format(self.player[self.player_turn]))
-                self.set_cell(x, y, self.turn)
-                break
 
     def player_move(self):
         def check_input(a):
@@ -107,28 +102,70 @@ class TicTacToe:
                 else:
                     print("Please enter only two values separated by a single space")
 
+    def easy_move(self):
+        while True:
+            x = random.randint(1, 3)
+            y = random.randint(1, 3)
+            if self.check_cell(x, y):
+                print('Making move level "easy"')
+                self.set_cell(x, y, self.turn)
+                break
+
+    def medium_move(self):
+        for x in range(1, 4):
+            for y in range(1, 4):
+                if self.check_cell(x, y):
+                    #print("checking cell", x, y, "for me")
+                    self.set_cell(x, y, self.turn)
+                    #self.print_board()
+                    if self.check_game(False):
+                        return
+                    self.set_cell(x, y, None)
+        for x in range(1, 4):
+            for y in range(1, 4):
+                if self.check_cell(x, y):
+                    #print("checking cell", x, y, "for other player")
+                    self.set_cell(x, y, not self.turn)
+                    #self.print_board()
+                    if self.check_game(False):
+                        self.set_cell(x, y, self.turn)
+                        return
+                    self.set_cell(x, y, None)
+
+        while True:
+            x = random.randint(1, 3)
+            y = random.randint(1, 3)
+
+            if self.check_cell(x, y):
+                print('Making move level "medium"')
+                self.set_cell(x, y, self.turn)
+                break
+
     def next_move(self):
         turn = self.player[self.player_turn]
         if turn == "user":
             self.player_move()
         if turn == "easy":
-            self.computer_move()
+            self.easy_move()
+        if turn == "medium":
+            self.medium_move()
         self.player_turn = not self.player_turn
         self.turn = not self.turn
 
 
 def main():
     while True:
+        available_commands = ["user", "easy", "medium"]
         command = input("Input command: > ").strip().split()
         if len(command) == 3:
             if command[0] == "start":
-                if (command[1] == "user" or command[1] == "easy") and (command[2] == "user" or command[2] == "easy"):
+                if (command[1] in available_commands) and (command[2] in available_commands):
                     game = TicTacToe(command[1], command[2])
                     game.print_board()
                     while True:
                         game.next_move()
                         game.print_board()
-                        if game.check_game():
+                        if game.check_game(True):
                             break
                 else:
                     print("Bad parameters!")
