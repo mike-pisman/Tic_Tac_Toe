@@ -10,19 +10,8 @@ import random
 class TicTacToe:
     def __init__(self, p1, p2):
         self.board = [None] * 9
-        self.turn = True  # True - player, False - computer
-        self.player = [p1, p2]
-        self.player_turn = 0
-        # while True:
-        # self.board = input("Enter cells: > ").strip()
-
-        '''if re.match(r'^[_XO]{9}$', self.board):
-            self.board = list(self.board.replace('_', None))
-            self.turn = 'X' if self.board.count('X') == self.board.count('O') else 'O'
-            break
-        else:
-            print("Please enter 9 character string resembling the board, only 'X', 'O', or '_' chars are allowed")
-        '''
+        self.turn = True  # False - p1, True - p2 first move
+        self.player = [p2, p1]
 
     def print_board(self):
         print('-' * 9)
@@ -69,9 +58,9 @@ class TicTacToe:
         if None not in board:
             if print_value:
                 print('Draw')
-            return True
+            return False
+        return None
         # print('Game not finished')
-        return False
 
     def print_win_msg(self, who):
         print('X wins' if who else 'O wins')
@@ -110,7 +99,7 @@ class TicTacToe:
             x = random.randint(1, 3)
             y = random.randint(1, 3)
             if self.check_cell(x, y):
-                print('Making move level "{}"'.format(self.player[self.player_turn]))
+                #print('Making move level "{}"'.format(self.player[self.turn]))
                 self.set_cell(x, y, self.turn)
                 break
 
@@ -120,7 +109,7 @@ class TicTacToe:
                 if self.check_cell(x, y):
                     self.set_cell(x, y, self.turn)
                     if self.check_game(False):
-                        print('Making move level "{}"'.format(self.player[self.player_turn]))
+                        print('Making move level "{}"'.format(self.player[self.turn]))
                         return
                     self.set_cell(x, y, None)
 
@@ -130,28 +119,27 @@ class TicTacToe:
                     self.set_cell(x, y, not self.turn)
                     if self.check_game(False):
                         self.set_cell(x, y, self.turn)
-                        print('Making move level "{}"'.format(self.player[self.player_turn]))
+                        print('Making move level "{}"'.format(self.player[self.turn]))
                         return
                     self.set_cell(x, y, None)
         self.easy_move()
 
     def hard_move(self):
-
-        def minimax(board, turn, fc):
-            fc += 1
+        def minimax(board, turn):
             new_turn = turn
             new_board = board[:]
             moves = []
 
-            if self.check_game(False, new_board):
-                if None not in new_board:
-                    return (-1, 0)
+            check = self.check_game(False, new_board)
+            if check is True:
                 return (-1, 10) if self.turn == new_turn else (-1, -10)
+            if check is False:
+                return (-1, 0)
 
             for i in range(9):
                 if new_board[i] is None:
                     new_board[i] = new_turn
-                    score = minimax(new_board, not new_turn, fc)[1]
+                    score = minimax(new_board, not new_turn)[1]
                     new_board[i] = None
                     moves.append((i, score))
 
@@ -170,13 +158,13 @@ class TicTacToe:
 
             return best_move
 
-        best_move = minimax(self.board, self.turn, 0)
+        best_move = minimax(self.board, self.turn)
 
-        print('Making move level "hard"')
+        #print('Making move level "hard"')
         self.board[best_move[0]] = self.turn
 
     def next_move(self):
-        turn = self.player[self.player_turn]
+        turn = self.player[self.turn]
         if turn == "user":
             self.player_move()
         if turn == "easy":
@@ -185,14 +173,12 @@ class TicTacToe:
             self.medium_move()
         if turn == "hard":
             self.hard_move()
-        self.player_turn = not self.player_turn
         self.turn = not self.turn
 
 def main():
     while True:
         available_commands = ["user", "easy", "medium", "hard"]
         command = input("Input command: > ").strip().split()
-        #command = "start easy hard".split()
         if len(command) == 3:
             if command[0] == "start":
                 if (command[1] in available_commands) and (command[2] in available_commands):
@@ -200,8 +186,8 @@ def main():
                     game.print_board()
                     while True:
                         game.next_move()
-                        game.print_board()
-                        if game.check_game(True):
+                        Harp option fixedgame.print_board()
+                        if game.check_game(True) is not None:
                             break
                 else:
                     print("Bad parameters!")
